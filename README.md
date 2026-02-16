@@ -12,14 +12,14 @@ A full-stack demo application showcasing the **Planbok MPC System V2 API** for m
 
 ## Supported Testnets
 
-| Chain    | Network                     | Symbol    |
-| -------- | --------------------------- | --------- |
-| EVM      | Sepolia                     | ETH       |
-| Bitcoin  | Testnet                     | BTC       |
-| Solana   | Testnet                     | SOL       |
-| Cosmos   | Testnet (theta-testnet-001) | ATOM      |
-| NEAR     | Testnet                     | NEAR      |
-| Polkadot | Paseo Testnet               | DOT-PASEO |
+| Chain    | Network                  | Symbol    |
+| -------- | ------------------------ | --------- |
+| EVM      | Sepolia                  | ETH       |
+| Bitcoin  | Testnet                  | BTC       |
+| Solana   | Testnet                  | SOL       |
+| Cosmos   | Mainnet (Disabled)       | ATOM      |
+| NEAR     | Testnet                  | NEAR      |
+| Polkadot | Paseo Testnet (Disabled) | DOT-PASEO |
 
 ## Quick Start
 
