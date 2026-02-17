@@ -156,9 +156,10 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
 
     const transactions = rawTransactions.map((tx: any) => {
       // Map status
-      let mappedStatus: 'pending' | 'completed' | 'failed' = 'pending';
+      let mappedStatus: 'pending' | 'signed' | 'completed' | 'failed' = 'pending';
       if (tx.status === 'confirmed') mappedStatus = 'completed';
       if (tx.status === 'failed' || tx.status === 'cancelled') mappedStatus = 'failed';
+      if (tx.status === 'signed') mappedStatus = 'signed';
 
       return {
         id: tx.id,
