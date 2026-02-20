@@ -15,9 +15,8 @@ router.use(sessionMiddleware);
 router.post('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { name } = req.body;
-    const refId = `user-${req.userId}-${Date.now()}`;
 
-    const customer = await planbokClient.createCustomer(name || req.user.email, refId);
+    const customer = await planbokClient.createCustomer(name || req.user.email, req.userId);
     
     // Update user with customer ID
     storageService.updateUser(req.userId!, { customerId: customer.id });
@@ -130,6 +129,78 @@ router.post('/:id/recovery', async (req: AuthenticatedRequest, res: Response) =>
   } catch (error: any) {
     console.error('Setup recovery error:', error);
     res.status(500).json({ error: error.message || 'Failed to setup recovery' });
+  }
+});
+
+/**
+ * POST /customers/:id/pin/update
+ * Update customer PIN
+ */
+router.post('/:id/pin/update', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { redirectUrl } = req.body;
+
+    if (!redirectUrl) {
+      return res.status(400).json({ error: 'redirectUrl is required' });
+    }
+
+    const result = await planbokClient.updatePinChallenge(
+      req.params.id,
+      redirectUrl
+    );
+
+    // Store challenge
+    storageService.createChallenge({
+      id: uuidv4(),
+      userId: req.userId!,
+      customerId: req.params.id,
+      challengeId: result.challengeId,
+      type: 'update-pin',
+      status: 'pending',
+      redirectUrl: result.redirectUrl,
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    console.error('Update PIN error:', error);
+    res.status(500).json({ error: error.message || 'Failed to update PIN' });
+  }
+});
+
+/**
+ * POST /customers/:id/pin/reset
+ * Reset customer PIN
+ */
+router.post('/:id/pin/reset', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { redirectUrl } = req.body;
+
+    if (!redirectUrl) {
+      return res.status(400).json({ error: 'redirectUrl is required' });
+    }
+
+    const result = await planbokClient.resetPinChallenge(
+      req.params.id,
+      redirectUrl
+    );
+
+    // Store challenge
+    storageService.createChallenge({
+      id: uuidv4(),
+      userId: req.userId!,
+      customerId: req.params.id,
+      challengeId: result.challengeId,
+      type: 'reset-pin',
+      status: 'pending',
+      redirectUrl: result.redirectUrl,
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    console.error('Reset PIN error:', error);
+    res.status(500).json({ error: error.message || 'Failed to reset PIN' });
   }
 });
 

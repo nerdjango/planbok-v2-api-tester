@@ -59,11 +59,21 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const walletSetId = await getSharedWalletSetId();
 
-    const { blockchain, customerId, page, limit } = req.query;
+    // STOOPID BUG FIX: Force customerId from session user to prevent data leakage
+    // If we rely on req.query.customerId, a malicious user or empty query returns ALL wallets in the shared set
+    const userCustomerIds = `${req.user.customerId ? req.user.customerId : ""}${req.user.customerId && req.user.orgCustomerId ? "," + req.user.orgCustomerId : req.user.orgCustomerId ? req.user.orgCustomerId : ""}`;
+
+    if (!userCustomerIds) {
+      // If the user hasn't created a customer identity yet, they cannot possibly have wallets
+      // Return empty list immediately to prevent showing other users' wallets
+      return res.json({ wallets: [] });
+    }
+
+    const { blockchain, page, limit } = req.query;
     const wallets = await planbokClient.listWallets({
       walletSetId,
       blockchain: blockchain as string,
-      customerId: customerId as string,
+      customerIds: userCustomerIds, // Enforce isolation
       page: page ? parseInt(page as string) : undefined,
       limit: limit ? parseInt(limit as string) : undefined,
     });
@@ -107,6 +117,18 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
       encryptedSecret,
       walletMetadata
     );
+
+    // If we created a wallet, we might have implicitly created a customer/organization link
+    // Store this ID in the user record if present
+    if (!req.user.orgCustomerId && result && Array.isArray(result.wallets) && result.wallets.length > 0) {
+      const firstWallet = result.wallets[0];
+      // In the MPC system, the 'customer' field on a wallet is the customer ID
+      if (firstWallet.customer) {
+        storageService.updateUser(req.user.id, {
+          orgCustomerId: firstWallet.customer
+        } as any); // cast to any because orgCustomerId is not in User interface yet
+      }
+    }
 
     res.status(201).json(result);
   } catch (error: any) {

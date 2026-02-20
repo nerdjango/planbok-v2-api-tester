@@ -121,7 +121,7 @@ export class PlanbokClient {
   async listWallets(filters?: {
     walletSetId?: string;
     blockchain?: string;
-    customerId?: string;
+    customerIds?: string;
     page?: number;
     limit?: number;
   }): Promise<any> {
@@ -236,6 +236,7 @@ export class PlanbokClient {
     type?: string;
     page?: number;
     limit?: number;
+    refId?: string;
   }): Promise<any> {
     const response = await this.client.get('/transactions', { params: filters });
     return response.data;
@@ -386,6 +387,26 @@ export class PlanbokClient {
     redirectUrl: string
   ): Promise<any> {
     const response = await this.client.post(`/customers/${customerId}/recovery`, {
+      redirectUrl,
+    });
+    return response.data;
+  }
+
+  async updatePinChallenge(
+    customerId: string,
+    redirectUrl: string
+  ): Promise<any> {
+    const response = await this.client.post(`/customers/${customerId}/update-pin`, {
+      redirectUrl,
+    });
+    return response.data;
+  }
+
+  async resetPinChallenge(
+    customerId: string,
+    redirectUrl: string
+  ): Promise<any> {
+    const response = await this.client.post(`/customers/${customerId}/reset-pin`, {
       redirectUrl,
     });
     return response.data;

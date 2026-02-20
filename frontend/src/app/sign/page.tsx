@@ -523,6 +523,7 @@ function SignContent() {
             const recoveredAddress = ethers.verifyMessage(messageToVerify, signature);
             console.log('[DEBUG-EFFECT] Recovered:', recoveredAddress, 'Expected:', selectedWalletData.address);
             isVerified = recoveredAddress.toLowerCase() === selectedWalletData.address.toLowerCase();
+            console.log('[DEBUG-EFFECT] Verified:', isVerified);
             
             // If failed, try with flipped v to diagnose
             if (!isVerified && r && s) {

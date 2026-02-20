@@ -9,6 +9,7 @@ export interface User {
   passwordHash: string;
   walletSetId?: string;
   customerId?: string;
+  orgCustomerId?: string; // ID of the customer in the organization's purview (for shared wallet set)
   createdAt: string;
 }
 

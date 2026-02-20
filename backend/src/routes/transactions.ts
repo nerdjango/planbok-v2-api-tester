@@ -152,6 +152,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
       type: type as string,
       page: page ? parseInt(page as string) : undefined,
       limit: limit ? parseInt(limit as string) : undefined,
+      refId: req.user.id
     });
 
     const transactions = rawTransactions.map((tx: any) => {

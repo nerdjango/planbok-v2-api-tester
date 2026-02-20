@@ -287,6 +287,20 @@ class ApiClient {
     });
   }
 
+  async updatePin(customerId: string, redirectUrl: string) {
+    return this.fetch<Challenge>(`/customers/${customerId}/pin/update`, {
+      method: 'POST',
+      body: JSON.stringify({ redirectUrl }),
+    });
+  }
+
+  async resetPin(customerId: string, redirectUrl: string) {
+    return this.fetch<Challenge>(`/customers/${customerId}/pin/reset`, {
+      method: 'POST',
+      body: JSON.stringify({ redirectUrl }),
+    });
+  }
+
   async createCustomerWalletChallenge(customerId: string, blockchains: string[], redirectUrl: string) {
     return this.fetch<Challenge>(`/customers/${customerId}/wallet/create`, {
       method: 'POST',

@@ -100,6 +100,8 @@ function CustomerSetupContent() {
       setUser({ ...user, customerId: result.id } as User);
       const customer = await api.getCustomer(result.id);
       setConfig(customer);
+      setWallets([]); // Clear wallets from previous customer
+      setSelectedChains(CHAINS.map(c => c.id)); // Reset selected chains
     } catch (error: unknown) {
       alert((error as Error).message);
     } finally {
@@ -152,6 +154,57 @@ function CustomerSetupContent() {
       alert((error as Error).message);
     } finally {
       setSettingUpRecovery(false);
+    }
+  };
+
+  const [updatingPin, setUpdatingPin] = useState(false);
+  const [resettingPin, setResettingPin] = useState(false);
+
+  const handleUpdatePin = async () => {
+    if (!user?.customerId) return;
+    setUpdatingPin(true);
+    try {
+      const redirectUrl = `${window.location.origin}/customer/setup?step=verify`;
+      const result = await api.updatePin(
+        user.customerId,
+        redirectUrl
+      );
+
+      const {
+        challengeId,
+        redirectUrl: hostedPinUrl,
+      } = result;
+      
+      localStorage.setItem('last_challenge_id', challengeId);
+      window.location.href = hostedPinUrl;
+    } catch (error: unknown) {
+      alert((error as Error).message);
+    } finally {
+      setUpdatingPin(false);
+    }
+  };
+
+  const handleResetPin = async () => {
+    if (!user?.customerId) return;
+    setResettingPin(true);
+    try {
+      const redirectUrl = `${window.location.origin}/customer/setup?step=verify`;
+      const result = await api.resetPin(
+        user.customerId,
+        redirectUrl
+      );
+
+      const {
+        challengeId,
+        redirectUrl: hostedPinUrl,
+      } = result;
+      
+      localStorage.setItem('last_challenge_id', challengeId);
+      window.location.href = hostedPinUrl;
+    } catch (error: unknown) {
+      alert((error as Error).message);
+    } finally {
+      setResettingPin(false);
     }
   };
 
@@ -385,6 +438,34 @@ function CustomerSetupContent() {
                       <div className="text-xs text-green-500 font-medium">Recovery is set</div>
                     )}
                   </div>
+
+                  {/* Update/Reset PIN Section */}
+                  {config?.hasPin && config?.hasRecovery && (
+                    <div className="col-span-1 md:col-span-2 p-4 rounded-2xl border bg-gray-950 border-gray-800 mt-2">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-bold">Manage PIN</span>
+                        <div className="flex gap-2">
+                           <button
+                             onClick={handleUpdatePin}
+                             disabled={updatingPin}
+                             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs font-bold transition-all border border-gray-700 hover:border-gray-600"
+                           >
+                             {updatingPin ? "Loading..." : "Update PIN"}
+                           </button>
+                           <button
+                             onClick={handleResetPin}
+                             disabled={resettingPin}
+                             className="px-4 py-2 bg-red-900/20 hover:bg-red-900/30 text-red-400 hover:text-red-300 rounded-lg text-xs font-bold transition-all border border-red-900/30 hover:border-red-900/50"
+                           >
+                             {resettingPin ? "Loading..." : "Reset PIN"}
+                           </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Securely update your PIN or reset it using your recovery method.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
