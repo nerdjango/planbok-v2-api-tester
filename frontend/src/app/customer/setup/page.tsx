@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { api, User, Wallet } from '@/lib/api';
-import { CHAINS } from '@/lib/chains';
+import { api, User, Wallet, Customer } from '@/lib/api';
+import { CHAINS, ChainInfo } from '@/lib/chains';
 import { 
   ChevronLeft, 
   UserPlus, 
@@ -21,24 +21,20 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-interface CustomerConfig {
-  hasPin: boolean;
-  hasRecovery: boolean;
-}
-
 function CustomerSetupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isVerifyStep = searchParams?.get('step') === 'verify';
 
   const [user, setUser] = useState<User | null>(null);
-  const [config, setConfig] = useState<CustomerConfig | null>(null);
+  const [config, setConfig] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [initializing, setInitializing] = useState(false);
   const [settingUpRecovery, setSettingUpRecovery] = useState(false);
   const [creatingWallets, setCreatingWallets] = useState(false);
-  const [selectedChains, setSelectedChains] = useState<string[]>(CHAINS.map(c => c.id));
+  const [exporting, setExporting] = useState(false);
+  const [selectedChains, setSelectedChains] = useState<string[]>(CHAINS.map((c: ChainInfo) => c.id));
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [verificationResult, setVerificationResult] = useState<unknown | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +57,7 @@ function CustomerSetupContent() {
         
         // Filter out chains that already have wallets
         const existingBlockchains = walletList.wallets.map((w: Wallet) => w.blockchain);
-        setSelectedChains(prev => prev.filter(id => !existingBlockchains.includes(id)));
+        setSelectedChains(prev => prev.filter((id: string) => !existingBlockchains.includes(id)));
       }
     } catch (error: unknown) {
       console.error('Failed to load user:', error);
@@ -72,7 +68,7 @@ function CustomerSetupContent() {
 
   // Poll for config updates
   useEffect(() => {
-    let interval: any;
+    let interval: NodeJS.Timeout | undefined;
     if (user && user.customerId && !isVerifyStep) {
       interval = setInterval(async () => {
         try {
@@ -101,7 +97,7 @@ function CustomerSetupContent() {
       const customer = await api.getCustomer(result.id);
       setConfig(customer);
       setWallets([]); // Clear wallets from previous customer
-      setSelectedChains(CHAINS.map(c => c.id)); // Reset selected chains
+      setSelectedChains(CHAINS.map((c: ChainInfo) => c.id)); // Reset selected chains
     } catch (error: unknown) {
       alert((error as Error).message);
     } finally {
@@ -233,8 +229,32 @@ function CustomerSetupContent() {
     }
   };
 
+  const handleExportKeys = async () => {
+    if (!user?.customerId) return;
+    setExporting(true);
+    try {
+      const redirectUrl = `${window.location.origin}/customer/setup?step=verify`;
+      const result = await api.exportPrivateKeys(
+        user.customerId,
+        redirectUrl
+      );
+
+      const {
+        challengeId,
+        redirectUrl: hostedPinUrl,
+      } = result;
+      
+      localStorage.setItem('last_challenge_id', challengeId);
+      window.location.href = hostedPinUrl;
+    } catch (error: unknown) {
+      alert((error as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   useEffect(() => {
-    let interval: any;
+    let interval: NodeJS.Timeout | undefined;
     if (isVerifyStep && !verificationResult && user?.customerId) {
       const challengeId = localStorage.getItem('last_challenge_id');
       if (challengeId) {
@@ -490,7 +510,7 @@ function CustomerSetupContent() {
                   <div>
                     <label className="block text-sm text-gray-400 mb-4">Select Blockchains</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {CHAINS.map(chain => {
+                      {CHAINS.map((chain: ChainInfo) => {
                         const isSelected = selectedChains.includes(chain.id);
                         const hasWallet = wallets.some(w => w.blockchain === chain.id);
                         return (
@@ -529,6 +549,24 @@ function CustomerSetupContent() {
                     {creatingWallets ? "Processing..." : "Create Wallets"}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
+
+                  {wallets.length > 0 && (
+                    <div className="pt-6 border-t border-gray-800">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-sm font-bold">Export Account</h3>
+                          <p className="text-xs text-gray-500">Securely export your private keys.</p>
+                        </div>
+                        <button
+                          onClick={handleExportKeys}
+                          disabled={exporting}
+                          className="px-6 py-2 bg-red-900/20 hover:bg-red-900/30 text-red-400 border border-red-900/30 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+                        >
+                          {exporting ? "Processing..." : "Export Keys"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -429,6 +429,16 @@ export class PlanbokClient {
     return response.data;
   }
 
+  async exportPrivateKeysChallenge(
+    customerId: string,
+    redirectUrl: string
+  ): Promise<any> {
+    const response = await this.client.post(`/customers/${customerId}/export-private-keys`, {
+      redirectUrl,
+    });
+    return response.data;
+  }
+
   // ================== Customer Challenges ==================
 
   async createCustomerTransferChallenge(

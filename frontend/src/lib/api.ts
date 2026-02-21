@@ -11,6 +11,18 @@ export interface User {
   custodyMode?: 'organization' | 'customer';
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  refId: string;
+  custodyType: string;
+  status: string;
+  hasPin: boolean;
+  hasRecovery: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Wallet {
   id: string;
   blockchain: string;
@@ -57,6 +69,7 @@ export interface Challenge {
   challengeId: string;
   redirectUrl: string;
   status: 'pending' | 'verified' | 'failed';
+  task?: string;
   expiresAt: string;
   result?: unknown;
   metadata?: Record<string, unknown>;
@@ -312,8 +325,15 @@ class ApiClient {
     return this.fetch<Challenge>(`/customers/${customerId}/challenges/${challengeId}`);
   }
 
+  async exportPrivateKeys(customerId: string, redirectUrl: string) {
+    return this.fetch<Challenge>(`/customers/${customerId}/export-private-keys`, {
+      method: 'POST',
+      body: JSON.stringify({ redirectUrl }),
+    });
+  }
+
   async getCustomer(customerId: string) {
-    return this.fetch<any>(`/customers/${customerId}`);
+    return this.fetch<Customer>(`/customers/${customerId}`);
   }
 
   async createCustomerTransferChallenge(customerId: string, params: {

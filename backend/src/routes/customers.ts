@@ -529,6 +529,42 @@ router.post('/:id/sign/delegate-action', async (req: AuthenticatedRequest, res: 
 });
 
 /**
+ * POST /customers/:id/export-private-keys
+ * Create private key export challenge for customer
+ */
+router.post('/:id/export-private-keys', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { redirectUrl } = req.body;
+
+    if (!redirectUrl) {
+      return res.status(400).json({ error: 'redirectUrl is required' });
+    }
+
+    const result = await planbokClient.exportPrivateKeysChallenge(
+      req.params.id,
+      redirectUrl
+    );
+
+    // Store challenge
+    storageService.createChallenge({
+      id: uuidv4(),
+      userId: req.userId!,
+      customerId: req.params.id,
+      challengeId: result.challengeId,
+      type: 'export-private-keys',
+      status: 'pending',
+      redirectUrl: result.redirectUrl,
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    console.error('Customer export challenge error:', error);
+    res.status(500).json({ error: error.message || 'Failed to create export challenge' });
+  }
+});
+
+/**
  * GET /customers/:id/challenges/:challengeId
  * Get challenge status
  */

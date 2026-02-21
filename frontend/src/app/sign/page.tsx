@@ -519,7 +519,7 @@ function SignContent() {
           if (chain.type === 'evm' && signature) {
             console.log('[DEBUG-EFFECT] Verifying message:', JSON.stringify(message));
             
-            const messageToVerify = message;
+            const messageToVerify = (encodedByHex && message.startsWith('0x')) ? ethers.getBytes(message) : message;
             const recoveredAddress = ethers.verifyMessage(messageToVerify, signature);
             console.log('[DEBUG-EFFECT] Recovered:', recoveredAddress, 'Expected:', selectedWalletData.address);
             isVerified = recoveredAddress.toLowerCase() === selectedWalletData.address.toLowerCase();
@@ -763,6 +763,7 @@ function SignContent() {
             const challenge = await api.createCustomerSignMessageChallenge(user.customerId, {
               walletId: selectedWallet,
               message,
+              encodedByHex: encodedByHex, // Pass encodedByHex flag
               redirectUrl: window.location.href,
             });
             window.location.href = challenge.redirectUrl;
