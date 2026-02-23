@@ -509,7 +509,7 @@ function SignContent() {
             console.log('[DEBUG-EFFECT] Using sigStr path, final:', cleanSig);
           }
         } else {
-          signature = sigStr.replace('0x', '');
+          signature = sigStr.startsWith('0x') ? sigStr.slice(2) : sigStr;
         }
         
         let isVerified = false;

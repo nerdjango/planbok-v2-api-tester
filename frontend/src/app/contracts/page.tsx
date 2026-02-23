@@ -362,15 +362,15 @@ function ContractsContent() {
               <ul className="space-y-4">
                 <li className="flex gap-3 text-sm text-gray-500">
                   <span className="text-blue-400">EVM:</span>
-                  <span>Use standard solidity signatures like <code>mint(uint256)</code>. Parameters are passed as an array of strings.</span>
+                  <span>Use standard solidity signatures like <code>transfer(address,uint256)</code>. Parameters are passed as an array of strings.</span>
                 </li>
                 <li className="flex gap-3 text-sm text-gray-500">
                   <span className="text-green-400">Solana:</span>
-                  <span>Contract address is the Program ID. Signature represents the instruction name or index.</span>
+                  <span>Contract address is the Program ID. Signature represents the instruction name with parameter names as follows: <code>transfer(to,amount)</code>.</span>
                 </li>
                 <li className="flex gap-3 text-sm text-gray-500">
-                  <span className="text-gray-400">General:</span>
-                  <span>This is a testnet demo. Do not use mainnet contract addresses or expect production performance.</span>
+                  <span className="text-purple-400">Near:</span>
+                  <span>Signature represents the instruction name with parameter names as follows: <code>ft_transfer(receiver_id,amount,memo)</code>.</span>
                 </li>
               </ul>
             </div>

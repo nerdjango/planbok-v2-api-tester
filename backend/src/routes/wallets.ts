@@ -69,11 +69,11 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
       return res.json({ wallets: [] });
     }
 
-    const { blockchain, page, limit } = req.query;
+    const { blockchain, page, limit, customerIds } = req.query;
     const wallets = await planbokClient.listWallets({
       walletSetId,
       blockchain: blockchain as string,
-      customerIds: userCustomerIds, // Enforce isolation
+      customerIds: customerIds ? customerIds as string : userCustomerIds, // Enforce isolation
       page: page ? parseInt(page as string) : undefined,
       limit: limit ? parseInt(limit as string) : undefined,
     });

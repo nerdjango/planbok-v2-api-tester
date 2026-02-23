@@ -158,7 +158,7 @@ class ApiClient {
   async listWallets(blockchain?: string, customerId?: string) {
     const params = new URLSearchParams();
     if (blockchain) params.append('blockchain', blockchain);
-    if (customerId) params.append('customerId', customerId);
+    if (customerId) params.append('customerIds', customerId);
     const queryString = params.toString() ? `?${params.toString()}` : '';
     return this.fetch<{ wallets: Wallet[] }>(`/wallets${queryString}`);
   }
