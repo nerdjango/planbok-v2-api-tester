@@ -10,7 +10,7 @@ export const config = {
   sessionSecret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
 
   // Planbok API
-  planbokApiUrl: process.env.PLANBOK_API_URL || 'https://beta-api.planbok.io/v2',
+  planbokApiUrl: process.env.PLANBOK_API_URL || 'https://api.planbok.io/v2',
   planbokApiKey: process.env.PLANBOK_API_KEY || '',
 
   // Organization credentials (use existing secret instead of generating new ones)

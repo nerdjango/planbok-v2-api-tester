@@ -98,12 +98,12 @@ planbok-v2-api-tester/
 
 ## Environment Variables
 
-| Variable          | Description                                    |
-| ----------------- | ---------------------------------------------- |
-| `PLANBOK_API_URL` | Planbok API URL (default: beta-api.planbok.io) |
-| `PLANBOK_API_KEY` | Your Planbok API key                           |
-| `PORT`            | Backend port (default: 4000)                   |
-| `SESSION_SECRET`  | Session encryption secret                      |
+| Variable          | Description                               |
+| ----------------- | ----------------------------------------- |
+| `PLANBOK_API_URL` | Planbok API URL (default: api.planbok.io) |
+| `PLANBOK_API_KEY` | Your Planbok API key                      |
+| `PORT`            | Backend port (default: 4000)              |
+| `SESSION_SECRET`  | Session encryption secret                 |
 
 ## License
 
