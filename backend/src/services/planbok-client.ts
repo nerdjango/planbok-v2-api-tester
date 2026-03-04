@@ -230,6 +230,16 @@ export class PlanbokClient {
     return response.data;
   }
 
+  async callContractViewFunction(params: {
+    walletId: string;
+    contractAddress: string;
+    abiFunctionSignature: string;
+    abiParameters: string[];
+  }): Promise<any> {
+    const response = await this.client.post('/transactions/contract-view/call', params);
+    return response.data;
+  }
+
   async listTransactions(filters?: {
     walletId?: string;
     status?: string;

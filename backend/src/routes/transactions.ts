@@ -139,6 +139,33 @@ router.post('/contract-execution', async (req: AuthenticatedRequest, res: Respon
 });
 
 /**
+ * POST /transactions/contract-view/call
+ * Call a contract view function (read-only)
+ */
+router.post('/contract-view/call', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { walletId, contractAddress, abiFunctionSignature, abiParameters } = req.body;
+
+    if (!walletId || !contractAddress || !abiFunctionSignature) {
+      return res.status(400).json({ error: 'walletId, contractAddress and abiFunctionSignature are required' });
+    }
+
+    const result = await planbokClient.callContractViewFunction({
+      walletId,
+      contractAddress,
+      abiFunctionSignature,
+      abiParameters,
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    console.error('Contract view call error:', error);
+    res.status(500).json({ error: error.message || 'Contract view call failed' });
+  }
+});
+
+
+/**
  * GET /transactions
  * List transactions
  */

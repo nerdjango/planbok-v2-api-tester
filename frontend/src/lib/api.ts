@@ -223,6 +223,18 @@ class ApiClient {
     });
   }
 
+  async callContractViewFunction(params: {
+    walletId: string;
+    contractAddress: string;
+    abiFunctionSignature: string;
+    abiParameters: string[];
+  }) {
+    return this.fetch<{ data: { result: unknown; raw?: string } }>('/transactions/contract-view/call', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
+
   async listTransactions(walletId?: string) {
     const params = walletId ? `?walletId=${walletId}` : '';
     return this.fetch<{ transactions: Transaction[] }>(`/transactions${params}`);

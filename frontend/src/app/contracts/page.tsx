@@ -35,7 +35,9 @@ function ContractsContent() {
   // Interaction state
   const [estimating, setEstimating] = useState(false);
   const [executing, setExecuting] = useState(false);
-  const [feeEstimate, setFeeEstimate] = useState<any>(null);
+  const [callingView, setCallingView] = useState(false);
+  const [feeEstimate, setFeeEstimate] = useState<Record<string, unknown> | null>(null);
+  const [viewResult, setViewResult] = useState<{ result: unknown; raw?: string } | null>(null);
   const [result, setResult] = useState<Transaction | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +54,7 @@ function ContractsContent() {
         setWallets(contractChains);
         
         if (walletId) {
-          const wallet = wallets.find(w => w.id === walletId);
+          const wallet = contractChains.find((w: Wallet) => w.id === walletId);
           setSelectedWallet(wallet);
         } else if (contractChains.length > 0) {
           setSelectedWallet(contractChains[0]);
@@ -91,8 +93,8 @@ function ContractsContent() {
         amount: amount || '0',
       });
       setFeeEstimate(estimate);
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : String(error));
     } finally {
       setEstimating(false);
     }
@@ -130,10 +132,31 @@ function ContractsContent() {
         const resp = await api.contractExecution(params);
         setResult(resp);
       }
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : String(error));
     } finally {
       setExecuting(false);
+    }
+  };
+
+  const handleCallView = async () => {
+    if (!selectedWallet || !contractAddress) return;
+    setCallingView(true);
+    setError(null);
+    setViewResult(null);
+    setResult(null);
+    try {
+      const resp = await api.callContractViewFunction({
+        walletId: selectedWallet.id,
+        contractAddress,
+        abiFunctionSignature: functionSignature,
+        abiParameters: parameters.filter(p => p !== ''),
+      });
+      setViewResult(resp.data);
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCallingView(false);
     }
   };
 
@@ -262,22 +285,32 @@ function ContractsContent() {
             </div>
 
             {/* Actions */}
-            <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="grid grid-cols-1 gap-4 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={handleEstimate}
+                  disabled={estimating || !contractAddress}
+                  className="flex items-center justify-center gap-2 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl font-medium transition-colors disabled:opacity-50"
+                >
+                  <Zap className={`w-4 h-4 ${estimating ? 'animate-pulse' : ''}`} />
+                  Estimate Fee
+                </button>
+                <button
+                  onClick={handleExecute}
+                  disabled={executing || !contractAddress}
+                  className="flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-medium transition-colors disabled:opacity-50"
+                >
+                  <Send className={`w-4 h-4 ${executing ? 'animate-pulse' : ''}`} />
+                  Execute
+                </button>
+              </div>
               <button
-                onClick={handleEstimate}
-                disabled={estimating || !contractAddress}
-                className="flex items-center justify-center gap-2 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl font-medium transition-colors disabled:opacity-50"
+                onClick={handleCallView}
+                disabled={callingView || !contractAddress}
+                className="flex items-center justify-center gap-2 py-3 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-600/30 rounded-xl font-medium transition-colors disabled:opacity-50"
               >
-                <Zap className={`w-4 h-4 ${estimating ? 'animate-pulse' : ''}`} />
-                Estimate Fee
-              </button>
-              <button
-                onClick={handleExecute}
-                disabled={executing || !contractAddress}
-                className="flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-medium transition-colors disabled:opacity-50"
-              >
-                <Send className={`w-4 h-4 ${executing ? 'animate-pulse' : ''}`} />
-                Execute
+                <Layers className={`w-4 h-4 ${callingView ? 'animate-spin' : ''}`} />
+                Call View Function (No Gas)
               </button>
             </div>
           </div>
@@ -294,7 +327,8 @@ function ContractsContent() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center bg-blue-900/20 p-3 rounded-lg">
                     <span className="text-sm text-blue-300">Estimated Gas ({feeLevel})</span>
-                    <span className="text-white font-mono">{feeEstimate[feeLevel]?.estimatedFeeFormatted}</span>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <span className="text-white font-mono">{(feeEstimate as any)?.[feeLevel]?.estimatedFeeFormatted}</span>
                   </div>
                   <div className="flex gap-2">
                     {['low', 'medium', 'high'].map(level => (
@@ -337,6 +371,32 @@ function ContractsContent() {
                       View on Explorer
                       <ExternalLink className="w-4 h-4" />
                     </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* View Result Card */}
+            {viewResult && (
+              <div className="bg-purple-600/10 rounded-2xl p-6 border border-purple-600/30">
+                <div className="flex items-center gap-2 text-purple-400 mb-4">
+                  <Code2 className="w-5 h-5" />
+                  <h3 className="font-semibold">View Result</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-950/50 p-4 rounded-xl border border-gray-800">
+                    <p className="text-xs text-gray-500 mb-1">Decoded Data</p>
+                    <pre className="text-sm text-purple-300 font-mono whitespace-pre-wrap overflow-auto max-h-40">
+                      {typeof viewResult.result === 'object' 
+                        ? JSON.stringify(viewResult.result, null, 2) 
+                        : String(viewResult.result)}
+                    </pre>
+                  </div>
+                  {viewResult.raw && (
+                    <div className="bg-gray-950/20 p-4 rounded-xl border border-gray-800/50">
+                      <p className="text-xs text-gray-700 mb-1">Raw Response</p>
+                      <p className="text-[10px] text-gray-600 font-mono break-all line-clamp-2">{viewResult.raw}</p>
+                    </div>
                   )}
                 </div>
               </div>

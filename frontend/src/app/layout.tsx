@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "CryptoVault - Multi-Chain Wallet Demo",
-  description: "A demo application showcasing the Planbok MPC System V2 API for multi-chain wallet management",
+  description: "A demo application showcasing the Planbok V2 API for multi-chain wallet management",
 };
 
 export default function RootLayout({
